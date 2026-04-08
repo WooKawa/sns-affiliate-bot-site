@@ -1,0 +1,38 @@
+name: Trend Analysis (Weekly)
+
+on:
+  schedule:
+    # 毎週月曜 UTC 7:00 = JST 16:00
+    - cron: "0 7 * * 1"
+  workflow_dispatch:
+
+env:
+  GOOGLE_SERVICE_ACCOUNT_JSON: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_JSON }}
+  GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+  TIKTOK_CLIENT_KEY: ${{ secrets.TIKTOK_CLIENT_KEY }}
+  TIKTOK_CLIENT_SECRET: ${{ secrets.TIKTOK_CLIENT_SECRET }}
+  SPREADSHEET_ID_ZATUGAN: ${{ secrets.SPREADSHEET_ID_ZATUGAN }}
+  SPREADSHEET_ID_SETSUYAKU: ${{ secrets.SPREADSHEET_ID_SETSUYAKU }}
+  SPREADSHEET_ID_LIFEHACK: ${{ secrets.SPREADSHEET_ID_LIFEHACK }}
+
+jobs:
+  trend-analysis:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install Python dependencies
+        run: pip install -r requirements.txt
+
+      - name: Analyze trends - zatugan
+        run: python src/trend_analyzer.py --genre zatugan
+
+      - name: Analyze trends - setsuyaku
+        run: python src/trend_analyzer.py --genre setsuyaku
+
+      - name: Analyze trends - lifehack
+        run: python src/trend_analyzer.py --genre lifehack

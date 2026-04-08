@@ -1,0 +1,129 @@
+name: Generate & Post Short
+
+on:
+  schedule:
+    # 毎日 UTC 9:00 = JST 18:00
+    - cron: "0 9 * * *"
+  workflow_dispatch:
+    inputs:
+      genre:
+        description: "投稿するジャンル（空欄で全ジャンル並列実行）"
+        required: false
+        default: ""
+        type: choice
+        options:
+          - ""
+          - zatugan
+          - setsuyaku
+          - lifehack
+
+jobs:
+  # 手動実行でジャンル指定がある場合はそのジャンルのみ
+  post-single:
+    if: ${{ github.event.inputs.genre != '' }}
+    runs-on: ubuntu-latest
+    env:
+      GOOGLE_SERVICE_ACCOUNT_JSON: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_JSON }}
+      GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+      PEXELS_API_KEY: ${{ secrets.PEXELS_API_KEY }}
+      GCS_BUCKET_NAME: ${{ secrets.GCS_BUCKET_NAME }}
+      TIKTOK_CLIENT_KEY: ${{ secrets.TIKTOK_CLIENT_KEY }}
+      TIKTOK_CLIENT_SECRET: ${{ secrets.TIKTOK_CLIENT_SECRET }}
+      TIKTOK_ACCESS_TOKEN_ZATUGAN: ${{ secrets.TIKTOK_ACCESS_TOKEN_ZATUGAN }}
+      TIKTOK_ACCESS_TOKEN_SETSUYAKU: ${{ secrets.TIKTOK_ACCESS_TOKEN_SETSUYAKU }}
+      TIKTOK_ACCESS_TOKEN_LIFEHACK: ${{ secrets.TIKTOK_ACCESS_TOKEN_LIFEHACK }}
+      INSTAGRAM_ACCESS_TOKEN_ZATUGAN: ${{ secrets.INSTAGRAM_ACCESS_TOKEN_ZATUGAN }}
+      INSTAGRAM_ACCESS_TOKEN_SETSUYAKU: ${{ secrets.INSTAGRAM_ACCESS_TOKEN_SETSUYAKU }}
+      INSTAGRAM_ACCESS_TOKEN_LIFEHACK: ${{ secrets.INSTAGRAM_ACCESS_TOKEN_LIFEHACK }}
+      INSTAGRAM_USER_ID_ZATUGAN: ${{ secrets.INSTAGRAM_USER_ID_ZATUGAN }}
+      INSTAGRAM_USER_ID_SETSUYAKU: ${{ secrets.INSTAGRAM_USER_ID_SETSUYAKU }}
+      INSTAGRAM_USER_ID_LIFEHACK: ${{ secrets.INSTAGRAM_USER_ID_LIFEHACK }}
+      YOUTUBE_CLIENT_ID: ${{ secrets.YOUTUBE_CLIENT_ID }}
+      YOUTUBE_CLIENT_SECRET: ${{ secrets.YOUTUBE_CLIENT_SECRET }}
+      YOUTUBE_REFRESH_TOKEN_ZATUGAN: ${{ secrets.YOUTUBE_REFRESH_TOKEN_ZATUGAN }}
+      YOUTUBE_REFRESH_TOKEN_SETSUYAKU: ${{ secrets.YOUTUBE_REFRESH_TOKEN_SETSUYAKU }}
+      YOUTUBE_REFRESH_TOKEN_LIFEHACK: ${{ secrets.YOUTUBE_REFRESH_TOKEN_LIFEHACK }}
+      SPREADSHEET_ID_ZATUGAN: ${{ secrets.SPREADSHEET_ID_ZATUGAN }}
+      SPREADSHEET_ID_SETSUYAKU: ${{ secrets.SPREADSHEET_ID_SETSUYAKU }}
+      SPREADSHEET_ID_LIFEHACK: ${{ secrets.SPREADSHEET_ID_LIFEHACK }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y ffmpeg fonts-noto-cjk
+
+      - name: Cache Whisper model
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/whisper
+          key: whisper-small-v1
+
+      - name: Install Python dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run pipeline
+        run: python src/main.py --genre ${{ github.event.inputs.genre }}
+
+  # スケジュール実行 or 全ジャンル指定時は3ジャンルを並列実行
+  post-all:
+    if: ${{ github.event_name == 'schedule' || github.event.inputs.genre == '' }}
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        genre: [zatugan, setsuyaku, lifehack]
+      fail-fast: false
+    env:
+      GOOGLE_SERVICE_ACCOUNT_JSON: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_JSON }}
+      GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+      PEXELS_API_KEY: ${{ secrets.PEXELS_API_KEY }}
+      GCS_BUCKET_NAME: ${{ secrets.GCS_BUCKET_NAME }}
+      TIKTOK_CLIENT_KEY: ${{ secrets.TIKTOK_CLIENT_KEY }}
+      TIKTOK_CLIENT_SECRET: ${{ secrets.TIKTOK_CLIENT_SECRET }}
+      TIKTOK_ACCESS_TOKEN_ZATUGAN: ${{ secrets.TIKTOK_ACCESS_TOKEN_ZATUGAN }}
+      TIKTOK_ACCESS_TOKEN_SETSUYAKU: ${{ secrets.TIKTOK_ACCESS_TOKEN_SETSUYAKU }}
+      TIKTOK_ACCESS_TOKEN_LIFEHACK: ${{ secrets.TIKTOK_ACCESS_TOKEN_LIFEHACK }}
+      INSTAGRAM_ACCESS_TOKEN_ZATUGAN: ${{ secrets.INSTAGRAM_ACCESS_TOKEN_ZATUGAN }}
+      INSTAGRAM_ACCESS_TOKEN_SETSUYAKU: ${{ secrets.INSTAGRAM_ACCESS_TOKEN_SETSUYAKU }}
+      INSTAGRAM_ACCESS_TOKEN_LIFEHACK: ${{ secrets.INSTAGRAM_ACCESS_TOKEN_LIFEHACK }}
+      INSTAGRAM_USER_ID_ZATUGAN: ${{ secrets.INSTAGRAM_USER_ID_ZATUGAN }}
+      INSTAGRAM_USER_ID_SETSUYAKU: ${{ secrets.INSTAGRAM_USER_ID_SETSUYAKU }}
+      INSTAGRAM_USER_ID_LIFEHACK: ${{ secrets.INSTAGRAM_USER_ID_LIFEHACK }}
+      YOUTUBE_CLIENT_ID: ${{ secrets.YOUTUBE_CLIENT_ID }}
+      YOUTUBE_CLIENT_SECRET: ${{ secrets.YOUTUBE_CLIENT_SECRET }}
+      YOUTUBE_REFRESH_TOKEN_ZATUGAN: ${{ secrets.YOUTUBE_REFRESH_TOKEN_ZATUGAN }}
+      YOUTUBE_REFRESH_TOKEN_SETSUYAKU: ${{ secrets.YOUTUBE_REFRESH_TOKEN_SETSUYAKU }}
+      YOUTUBE_REFRESH_TOKEN_LIFEHACK: ${{ secrets.YOUTUBE_REFRESH_TOKEN_LIFEHACK }}
+      SPREADSHEET_ID_ZATUGAN: ${{ secrets.SPREADSHEET_ID_ZATUGAN }}
+      SPREADSHEET_ID_SETSUYAKU: ${{ secrets.SPREADSHEET_ID_SETSUYAKU }}
+      SPREADSHEET_ID_LIFEHACK: ${{ secrets.SPREADSHEET_ID_LIFEHACK }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y ffmpeg fonts-noto-cjk
+
+      - name: Cache Whisper model
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/whisper
+          key: whisper-small-v1
+
+      - name: Install Python dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run pipeline
+        run: python src/main.py --genre ${{ matrix.genre }}

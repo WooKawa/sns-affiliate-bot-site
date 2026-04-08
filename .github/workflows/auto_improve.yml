@@ -1,0 +1,50 @@
+name: Auto Improve (Weekly)
+
+on:
+  schedule:
+    # 毎週月曜 UTC 7:30 = JST 16:30（trend_analysis の30分後）
+    - cron: "30 7 * * 1"
+  workflow_dispatch:
+
+env:
+  GOOGLE_SERVICE_ACCOUNT_JSON: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_JSON }}
+  GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+  YOUTUBE_CLIENT_ID: ${{ secrets.YOUTUBE_CLIENT_ID }}
+  YOUTUBE_CLIENT_SECRET: ${{ secrets.YOUTUBE_CLIENT_SECRET }}
+  YOUTUBE_REFRESH_TOKEN_ZATUGAN: ${{ secrets.YOUTUBE_REFRESH_TOKEN_ZATUGAN }}
+  YOUTUBE_REFRESH_TOKEN_SETSUYAKU: ${{ secrets.YOUTUBE_REFRESH_TOKEN_SETSUYAKU }}
+  YOUTUBE_REFRESH_TOKEN_LIFEHACK: ${{ secrets.YOUTUBE_REFRESH_TOKEN_LIFEHACK }}
+  INSTAGRAM_ACCESS_TOKEN_ZATUGAN: ${{ secrets.INSTAGRAM_ACCESS_TOKEN_ZATUGAN }}
+  INSTAGRAM_ACCESS_TOKEN_SETSUYAKU: ${{ secrets.INSTAGRAM_ACCESS_TOKEN_SETSUYAKU }}
+  INSTAGRAM_ACCESS_TOKEN_LIFEHACK: ${{ secrets.INSTAGRAM_ACCESS_TOKEN_LIFEHACK }}
+  INSTAGRAM_USER_ID_ZATUGAN: ${{ secrets.INSTAGRAM_USER_ID_ZATUGAN }}
+  INSTAGRAM_USER_ID_SETSUYAKU: ${{ secrets.INSTAGRAM_USER_ID_SETSUYAKU }}
+  INSTAGRAM_USER_ID_LIFEHACK: ${{ secrets.INSTAGRAM_USER_ID_LIFEHACK }}
+  SPREADSHEET_ID_ZATUGAN: ${{ secrets.SPREADSHEET_ID_ZATUGAN }}
+  SPREADSHEET_ID_SETSUYAKU: ${{ secrets.SPREADSHEET_ID_SETSUYAKU }}
+  SPREADSHEET_ID_LIFEHACK: ${{ secrets.SPREADSHEET_ID_LIFEHACK }}
+
+jobs:
+  auto-improve:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install Python dependencies
+        run: pip install -r requirements.txt
+
+      - name: Step 1 - Collect analytics
+        run: python src/analytics_collector.py
+
+      - name: Step 2 - Analyze performance
+        run: python src/performance_analyzer.py
+
+      - name: Step 3 - Optimize prompts
+        run: python src/prompt_optimizer.py
+
+      - name: Step 4 - Generate weekly report
+        run: python src/weekly_reporter.py
