@@ -3,18 +3,20 @@ youtube_uploader.py - YouTube Data API v3 で Shorts を予約投稿するモジ
 
 既存の youtube-auto-bot/src/youtube_uploader.py をベースに改修。
 変更点:
-  - ジャンルごとに別アカウントのリフレッシュトークンを使用
+  - 全チャンネル共通の YOUTUBE_REFRESH_TOKEN を使用（同一Googleアカウント運用対応）
+  - ジャンルごとのチャンネルIDを環境変数で指定（YOUTUBE_CHANNEL_ID_*）
   - カテゴリID: 27（教育）に変更
-  - 予約投稿: 翌日 18:00 JST 固定（既存はランダム）
-  - タイトル末尾の「 #Shorts」付与を保証（script_generatorで付与済みでも二重にならないよう考慮）
+  - 予約投稿: 翌日 18:00 JST 固定
+  - タイトル末尾の「 #Shorts」付与を保証
   - サムネイルアップロード機能は削除（Short専用のため不要）
 
 環境変数:
   YOUTUBE_CLIENT_ID
   YOUTUBE_CLIENT_SECRET
-  YOUTUBE_REFRESH_TOKEN_ZATUGAN
-  YOUTUBE_REFRESH_TOKEN_SETSUYAKU
-  YOUTUBE_REFRESH_TOKEN_LIFEHACK
+  YOUTUBE_REFRESH_TOKEN            ← 全チャンネル共通（同一Googleアカウント）
+  YOUTUBE_CHANNEL_ID_ZATUGAN       ← 雑学チャンネルID
+  YOUTUBE_CHANNEL_ID_SETSUYAKU     ← 節約チャンネルID
+  YOUTUBE_CHANNEL_ID_LIFEHACK      ← ライフハックチャンネルID
 """
 
 import os
@@ -32,10 +34,10 @@ JST = timezone(timedelta(hours=9))
 YOUTUBE_SCOPES = ["https://www.googleapis.com/auth/youtube.upload"]
 CATEGORY_ID = "27"  # 教育
 
-GENRE_TO_TOKEN_ENV = {
-    "zatugan": "YOUTUBE_REFRESH_TOKEN_ZATUGAN",
-    "setsuyaku": "YOUTUBE_REFRESH_TOKEN_SETSUYAKU",
-    "lifehack": "YOUTUBE_REFRESH_TOKEN_LIFEHACK",
+GENRE_TO_CHANNEL_ID_ENV = {
+    "zatugan":   "YOUTUBE_CHANNEL_ID_ZATUGAN",
+    "setsuyaku": "YOUTUBE_CHANNEL_ID_SETSUYAKU",
+    "lifehack":  "YOUTUBE_CHANNEL_ID_LIFEHACK",
 }
 
 
@@ -57,7 +59,7 @@ def upload_video(
     Returns:
         YouTube動画ID
     """
-    credentials = _get_credentials(genre)
+    credentials = _get_credentials()
     youtube = build("youtube", "v3", credentials=credentials)
 
     publish_time_str = _get_publish_time()
@@ -67,12 +69,21 @@ def upload_video(
     if not title.endswith("#Shorts"):
         title = title.rstrip() + " #Shorts"
 
+    # ジャンルに対応するチャンネルIDを取得
+    channel_id_env = GENRE_TO_CHANNEL_ID_ENV.get(genre)
+    channel_id = os.environ.get(channel_id_env, "") if channel_id_env else ""
+    if channel_id:
+        logger.info(f"Target channel ID: {channel_id}")
+    else:
+        logger.warning(f"YOUTUBE_CHANNEL_ID_{genre.upper()} not set. Using default channel.")
+
     request_body = {
         "snippet": {
             "title": title,
             "description": description,
             "categoryId": CATEGORY_ID,
             "defaultLanguage": "ja",
+            **({"channelId": channel_id} if channel_id else {}),
         },
         "status": {
             "privacyStatus": "private",
@@ -107,18 +118,14 @@ def upload_video(
     return video_id
 
 
-def _get_credentials(genre: str) -> Credentials:
+def _get_credentials() -> Credentials:
     """
-    ジャンルに対応するOAuth2情報からCredentialsを生成し、
-    access_tokenを自動更新して返す。
+    共通のOAuth2情報からCredentialsを生成し、access_tokenを自動更新して返す。
+    全チャンネルが同一Googleアカウントで運用されている前提。
     """
-    token_env = GENRE_TO_TOKEN_ENV.get(genre)
-    if not token_env:
-        raise ValueError(f"Unknown genre: '{genre}'")
-
-    refresh_token = os.environ.get(token_env)
+    refresh_token = os.environ.get("YOUTUBE_REFRESH_TOKEN")
     if not refresh_token:
-        raise EnvironmentError(f"'{token_env}' is not set")
+        raise EnvironmentError("'YOUTUBE_REFRESH_TOKEN' is not set")
 
     creds = Credentials(
         token=None,
@@ -129,7 +136,7 @@ def _get_credentials(genre: str) -> Credentials:
         scopes=YOUTUBE_SCOPES,
     )
     creds.refresh(Request())
-    logger.info(f"YouTube credentials refreshed for genre: {genre}")
+    logger.info("YouTube credentials refreshed (shared account)")
     return creds
 
 
