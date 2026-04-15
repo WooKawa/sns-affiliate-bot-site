@@ -113,13 +113,19 @@ def run(genre: str):
         # Step 5: 音声合成
         # ──────────────────────────────────────
         logger.info("[Step 5] Generating audio...")
-        tts.generate_audio(script_data["script"], output_path=AUDIO_PATH)
+        tts.synthesize_speech(script_data["script"])
 
         # ──────────────────────────────────────
         # Step 6: 背景動画取得
         # ──────────────────────────────────────
         logger.info("[Step 6] Fetching background videos...")
-        video_clips = video_fetcher.fetch_videos(script_data["scenes"], video_type="short")
+        downloaded_paths = video_fetcher.fetch_videos(script_data["scenes"], video_type="short")
+        # video_composerが期待する辞書形式に変換
+        scenes = script_data.get("scenes", [{}])
+        video_clips = [
+            {"path": p, "duration": scenes[i].get("duration", 20) if i < len(scenes) else 20}
+            for i, p in enumerate(downloaded_paths)
+        ]
 
         # ──────────────────────────────────────
         # Step 7: 動画合成・字幕焼き込み

@@ -174,7 +174,9 @@ def _get_instagram_insights(media_id: str, access_token: str) -> dict:
 def _collect_youtube(genre: str, since_date: str, until_date: str) -> list[dict]:
     """YouTube Analytics APIからShortsのメトリクスを取得する"""
     token_env = YOUTUBE_TOKEN_ENV.get(genre)
-    refresh_token = os.environ.get(token_env)
+    refresh_token = (
+        os.environ.get(token_env) if token_env else None
+    ) or os.environ.get("YOUTUBE_REFRESH_TOKEN")
     if not refresh_token:
         logger.warning(f"[YouTube/{genre}] Refresh token not set. Skipping.")
         return []
