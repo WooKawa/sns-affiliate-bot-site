@@ -77,7 +77,11 @@ def _build_report(
     """レポートデータを組み立てる"""
     # 集計
     total_views = sum(int(r.get("views", 0) or 0) for r in records)
-    total_cv = sum(int(r.get("cvr", 0) or 0) for r in records)  # CVRの合計（暫定）
+    # CV数 = 再生数 × CVR（率）の合計
+    total_cv = sum(
+        int(r.get("views", 0) or 0) * float(r.get("cvr", 0) or 0)
+        for r in records
+    )
     revenue_per_cv = ESTIMATED_REVENUE_PER_CV.get(genre, 500)
     estimated_revenue = total_cv * revenue_per_cv
 

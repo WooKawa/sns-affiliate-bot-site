@@ -168,11 +168,9 @@ def generate_script(
 
     # 説明文の先頭に「#PR」を付与・末尾にアフィリ誘導文を追加
     description = data["description"].strip()
-    description = f"#PR\n{description}"
-    if product_name:
-        description += f"\n\n👆プロフのリンクから「{product_name}」をチェック！"
     hashtag_str = " ".join(hashtags)
-    data["description"] = f"{description}\n\n{hashtag_str}"
+    affili_line = f"\n\n👆プロフのリンクから「{product_name}」をチェック！" if product_name else ""
+    data["description"] = f"#PR\n{description}{affili_line}\n\n{hashtag_str}"
 
     logger.info(f"Title: {data['title']}")
     logger.info(f"Hashtags: {data['hashtags']}")

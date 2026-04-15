@@ -59,7 +59,7 @@ def upload_video(
     Returns:
         YouTube動画ID
     """
-    credentials = _get_credentials()
+    credentials = _get_credentials(genre)
     youtube = build("youtube", "v3", credentials=credentials)
 
     publish_time_str = _get_publish_time()
@@ -118,14 +118,20 @@ def upload_video(
     return video_id
 
 
-def _get_credentials() -> Credentials:
+def _get_credentials(genre: str = "") -> Credentials:
     """
-    共通のOAuth2情報からCredentialsを生成し、access_tokenを自動更新して返す。
-    全チャンネルが同一Googleアカウントで運用されている前提。
+    OAuth2情報からCredentialsを生成し、access_tokenを自動更新して返す。
+    ジャンル別トークン（YOUTUBE_REFRESH_TOKEN_{GENRE}）を優先し、
+    なければ共通トークン（YOUTUBE_REFRESH_TOKEN）にフォールバック。
     """
-    refresh_token = os.environ.get("YOUTUBE_REFRESH_TOKEN")
+    genre_token_key = f"YOUTUBE_REFRESH_TOKEN_{genre.upper()}" if genre else ""
+    refresh_token = (
+        os.environ.get(genre_token_key) if genre_token_key else None
+    ) or os.environ.get("YOUTUBE_REFRESH_TOKEN")
     if not refresh_token:
-        raise EnvironmentError("'YOUTUBE_REFRESH_TOKEN' is not set")
+        raise EnvironmentError(
+            f"'{genre_token_key}' or 'YOUTUBE_REFRESH_TOKEN' is not set"
+        )
 
     creds = Credentials(
         token=None,
