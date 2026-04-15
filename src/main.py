@@ -74,15 +74,6 @@ def run(genre: str):
         logger.info("[Step 1] Generating theme...")
         theme, row_index = theme_generator.generate_theme(genre)
         logger.info(f"Theme: '{theme}' at row {row_index}")
-
-        # ──────────────────────────────────────
-        # Step 2: pending行取得（Step 1で追加した行）
-        # ──────────────────────────────────────
-        logger.info("[Step 2] Getting pending row...")
-        pending = sheet.get_pending_row()
-        if pending is None:
-            raise RuntimeError("No pending row found after theme generation")
-        row_index, theme = pending
         sheet.update_status(row_index, "処理中")
 
         # ──────────────────────────────────────

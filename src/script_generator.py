@@ -157,7 +157,9 @@ def generate_script(
     }
     if len(hashtags) != 5:
         logger.warning(f"Hashtag count is {len(hashtags)}, adjusting to 5")
-        hashtags = (hashtags + fallback_tags.get(genre, fallback_tags["zatugan"]))[:5]
+        fallback = fallback_tags.get(genre, fallback_tags["zatugan"])
+        merged = list(dict.fromkeys(hashtags + fallback))  # 重複排除しつつ順序保持
+        hashtags = merged[:5]
         data["hashtags"] = hashtags
 
     # タイトル末尾に「 #Shorts」を確実に付与
