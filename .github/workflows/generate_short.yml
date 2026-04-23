@@ -70,7 +70,7 @@ jobs:
 
       - name: Install Python dependencies
         run: |
-          pip install --upgrade pip setuptools wheel
+          pip install --upgrade pip "setuptools<81" wheel
           pip install --no-build-isolation openai-whisper==20231117
           pip install -r requirements.txt
 
@@ -133,7 +133,7 @@ jobs:
 
       - name: Install Python dependencies
         run: |
-          pip install --upgrade pip setuptools wheel
+          pip install --upgrade pip "setuptools<81" wheel
           pip install --no-build-isolation openai-whisper==20231117
           pip install -r requirements.txt
 
