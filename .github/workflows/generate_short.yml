@@ -133,6 +133,7 @@ jobs:
       - name: Install Python dependencies
         run: |
           pip install --upgrade pip setuptools wheel
+          pip install --no-build-isolation openai-whisper==20231117
           pip install -r requirements.txt
 
       - name: Run pipeline

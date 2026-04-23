@@ -9,7 +9,7 @@ google-api-python-client==2.130.0
 
 # 動画・音声処理
 moviepy==1.0.3
-openai-whisper==20231117
+# openai-whisper はワークフローで別途インストール（--no-build-isolation）
 ffmpeg-python==0.2.0
 
 # HTTP
