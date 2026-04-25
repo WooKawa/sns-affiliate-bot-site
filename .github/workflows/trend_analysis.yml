@@ -1,9 +1,9 @@
 name: Trend Analysis (Weekly)
 
 on:
-  schedule:
-    # 毎週月曜 UTC 7:00 = JST 16:00
-    - cron: "0 7 * * 1"
+  # schedule:
+  #   # 毎週月曜 UTC 7:00 = JST 16:00
+  #   - cron: "0 7 * * 1"
   workflow_dispatch:
 
 env:

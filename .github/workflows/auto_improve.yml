@@ -1,9 +1,9 @@
 name: Auto Improve (Weekly)
 
 on:
-  schedule:
-    # 毎週月曜 UTC 7:30 = JST 16:30（trend_analysis の30分後）
-    - cron: "30 7 * * 1"
+  # schedule:
+  #   # 毎週月曜 UTC 7:30 = JST 16:30（trend_analysis の30分後）
+  #   - cron: "30 7 * * 1"
   workflow_dispatch:
 
 env:
