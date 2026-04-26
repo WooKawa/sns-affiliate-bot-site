@@ -109,20 +109,25 @@ def _get_gcs_client():
 
 def _upload_to_gcs(video_path: str, blob_name: str) -> str:
     """
-    動画ファイルをGCSにアップロードして公開URLを返す。
-    アップロード後にオブジェクトを一時公開（IAM公開設定済みバケットを前提）。
+    動画ファイルをGCSにアップロードして署名付きURL（15分有効）を返す。
+    バケットの公開設定は不要。
     """
+    from datetime import timedelta
+
     bucket_name = os.environ["GCS_BUCKET_NAME"]
     client = _get_gcs_client()
     bucket = client.bucket(bucket_name)
     blob = bucket.blob(blob_name)
 
     blob.upload_from_filename(video_path, content_type="video/mp4")
-    blob.make_public()
 
-    public_url = blob.public_url
-    logger.info(f"Uploaded to GCS: {public_url}")
-    return public_url
+    signed_url = blob.generate_signed_url(
+        expiration=timedelta(minutes=15),
+        method="GET",
+        version="v4",
+    )
+    logger.info(f"Uploaded to GCS (signed URL, 15min): {signed_url[:80]}...")
+    return signed_url
 
 
 def _delete_gcs_blob(blob_name: str):
