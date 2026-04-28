@@ -1,9 +1,9 @@
 name: Generate & Post Short
 
 on:
-  # schedule:
-  #   # 毎日 UTC 9:00 = JST 18:00
-  #   - cron: "0 9 * * *"
+  schedule:
+    # 毎日 UTC 9:00 = JST 18:00
+    - cron: "0 9 * * *"
   workflow_dispatch:
     inputs:
       genre:
