@@ -86,7 +86,7 @@ def synthesize_speech(text: str) -> str:
     )
     audio_config = texttospeech.AudioConfig(
         audio_encoding=texttospeech.AudioEncoding.MP3,
-        speaking_rate=1.05,
+        speaking_rate=1.5,
         pitch=0.0,
     )
 
