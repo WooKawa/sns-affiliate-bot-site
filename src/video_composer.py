@@ -8,7 +8,7 @@ video_composer.py - 動画合成・字幕焼き込みモジュール（40秒Shor
   4. FFmpeg で 音声+背景動画+字幕 を合成して出力
 
 出力仕様: 1080x1920 / 30fps / libx264 / MP4
-字幕:     下部中央 / NotoSansCJK-Bold / size48 / 白文字黒縁2px
+字幕:     画面中央 / NotoSansCJK-Bold / size80 / 白文字黒縁3px
 """
 
 import os
@@ -212,8 +212,8 @@ def _transcribe(audio_path: str) -> list[dict]:
 def _generate_ass(segments: list[dict], output_path: str):
     """
     FFmpeg用ASSファイルを生成する。
-    フォント: Noto Sans CJK JP Bold / size48 / 白文字・黒縁2px
-    位置: 下部中央（Alignment=2）
+    フォント: Noto Sans CJK JP Bold / size80 / 白文字・黒縁3px
+    位置: 画面中央（Alignment=5）
     """
     ass_header = f"""[Script Info]
 ScriptType: v4.00+
@@ -223,7 +223,7 @@ ScaledBorderAndShadow: yes
 
 [V4+ Styles]
 Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding
-Style: Default,{FONT_NAME},48,&H00FFFFFF,&H000000FF,&H00000000,&HAA000000,-1,0,0,0,100,100,0,0,1,2,1,2,40,40,80,1
+Style: Default,{FONT_NAME},80,&H00FFFFFF,&H000000FF,&H00000000,&HAA000000,-1,0,0,0,100,100,0,0,1,3,1,5,40,40,0,1
 
 [Events]
 Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text"""
