@@ -61,12 +61,13 @@ def select_affiliate(genre: str, theme: str, row_index: int) -> dict:
     url = chosen.get("tracking_url", "")
     product_name = chosen.get("product_name", "")
     category = chosen.get("category", "")
+    pr_points = chosen.get("pr_points", "")
 
     # Step 4: スプレッドシートに書き込む
     sheet.update_affiliate_info(row_index, url, product_name)
     logger.info(f"Selected: '{product_name}' ({url})")
 
-    return {"url": url, "product_name": product_name, "category": category}
+    return {"url": url, "product_name": product_name, "category": category, "pr_points": pr_points}
 
 
 def _extract_keywords(client, theme: str) -> list[str]:
@@ -104,6 +105,7 @@ def _select_best_candidate(client, theme: str, candidates: list[dict]) -> dict:
     candidates_text = "\n".join(
         f"{i + 1}. 商品名: {c['product_name']} / カテゴリ: {c['category']} / "
         f"想定単価: {c['unit_price']} / キーワード: {', '.join(c['match_keywords'])}"
+        + (f" / PRポイント: {c['pr_points']}" if c.get('pr_points') else "")
         for i, c in enumerate(candidates)
     )
 

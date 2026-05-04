@@ -39,6 +39,8 @@ def generate_script(
     genre: str,
     theme: str,
     product_name: str = "",
+    affiliate_url: str = "",
+    pr_points: str = "",
     trend_data: dict = None,
     prompt_hints: dict = None,
 ) -> dict:
@@ -49,6 +51,8 @@ def generate_script(
         genre: 'zatugan' | 'setsuyaku' | 'lifehack'
         theme: 動画テーマ
         product_name: 紹介商品名（アフィリエイト）
+        affiliate_url: アフィリエイトURL（説明文に直接挿入）
+        pr_points: 広告主PRポイント（Geminiの紹介文生成に活用）
         trend_data: spreadsheetから取得した最新トレンドデータ（Noneの場合は参照なし）
         prompt_hints: prompt_hintsシートから取得した改善ヒント（Noneの場合は参照なし）
 
@@ -65,7 +69,7 @@ def generate_script(
 
     trend_section = _build_trend_section(trend_data)
     hint_section = _build_hint_section(prompt_hints)
-    affili_section = _build_affili_section(product_name)
+    affili_section = _build_affili_section(product_name, affiliate_url, pr_points)
     hashtag_style = GENRE_HASHTAG_STYLE.get(genre, "")
     hook_patterns = GENRE_HOOK_PATTERNS.get(genre, "")
 
@@ -176,7 +180,14 @@ def generate_script(
     # 説明文の先頭に「#PR」を付与・末尾にアフィリ誘導文を追加
     description = data["description"].strip()
     hashtag_str = " ".join(hashtags)
-    affili_line = f"\n\n👆プロフのリンクから「{product_name}」をチェック！" if product_name else ""
+    if product_name and affiliate_url:
+        # URLがある場合は直接リンクを挿入（YouTube・TikTok向け）
+        affili_line = f"\n\n👆「{product_name}」はこちら\n{affiliate_url}"
+    elif product_name:
+        # URLがない場合はプロフ誘導（Instagram向けフォールバック）
+        affili_line = f"\n\n👆プロフのリンクから「{product_name}」をチェック！"
+    else:
+        affili_line = ""
     data["description"] = f"#PR\n{description}{affili_line}\n\n{hashtag_str}"
 
     logger.info(f"Title: {data['title']}")
@@ -218,13 +229,16 @@ def _build_hint_section(prompt_hints: dict | None) -> str:
     return f"\n【今週の改善指示（必ず反映すること）】\n{prompt_hints['script_hint']}\n"
 
 
-def _build_affili_section(product_name: str) -> str:
+def _build_affili_section(product_name: str, affiliate_url: str = "", pr_points: str = "") -> str:
     """アフィリエイト商品をscriptに自然に組み込む指示を追加する"""
     if not product_name:
         return ""
+    url_hint = "・説明欄のリンクから確認できることを一言添えること" if affiliate_url else ""
+    pr_hint = f"\n- 紹介時に以下のPRポイントを参考にすること（そのまま読まず、動画の流れに合わせて自然に一言に凝縮する）:\n  {pr_points}" if pr_points else ""
     return (
         f"\n- scriptの最後の一文で「{product_name}」を自然に紹介すること"
-        f"（押し売り感なく、視聴者のメリットとして伝える）"
+        f"（押し売り感なく、視聴者のメリットとして伝える）{url_hint}"
+        f"{pr_hint}"
     )
 
 
@@ -235,11 +249,13 @@ if __name__ == "__main__":
     parser.add_argument("--genre", required=True, choices=["zatugan", "setsuyaku", "lifehack"])
     parser.add_argument("--theme", required=True)
     parser.add_argument("--product", default="", help="紹介商品名")
+    parser.add_argument("--url", default="", help="アフィリエイトURL")
+    parser.add_argument("--pr", default="", help="広告主PRポイント")
     args = parser.parse_args()
 
     sheet = SpreadsheetManager(args.genre)
     trend = sheet.get_latest_trend()
     hints = sheet.get_prompt_hints()
 
-    result = generate_script(args.genre, args.theme, args.product, trend, hints)
+    result = generate_script(args.genre, args.theme, args.product, args.url, args.pr, trend, hints)
     print(json.dumps(result, ensure_ascii=False, indent=2))

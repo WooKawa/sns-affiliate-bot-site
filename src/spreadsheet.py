@@ -209,6 +209,9 @@ class SpreadsheetManager:
             if not matched and match_keywords:
                 continue
 
+            # J列: PRポイント（広告主説明文）
+            pr_points = row[9].strip() if len(row) >= 10 else ""
+
             results.append({
                 "genre": genre_col,
                 "category": category,
@@ -218,6 +221,7 @@ class SpreadsheetManager:
                 "unit_price": unit_price,
                 "match_keywords": match_keywords,
                 "media": media,
+                "pr_points": pr_points,
             })
 
         logger.info(f"Affiliate candidates found: {len(results)}")

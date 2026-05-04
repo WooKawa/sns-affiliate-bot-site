@@ -82,7 +82,9 @@ def run(genre: str):
         logger.info("[Step 3] Selecting affiliate...")
         affili_result = affiliate_selector.select_affiliate(genre, theme, row_index)
         product_name = affili_result.get("product_name", "")
-        logger.info(f"Affiliate product: '{product_name}'")
+        affiliate_url = affili_result.get("url", "")
+        pr_points = affili_result.get("pr_points", "")
+        logger.info(f"Affiliate product: '{product_name}' / url: '{affiliate_url}'")
 
         # ──────────────────────────────────────
         # Step 4: 台本・メタデータ生成
@@ -94,6 +96,8 @@ def run(genre: str):
             genre=genre,
             theme=theme,
             product_name=product_name,
+            affiliate_url=affiliate_url,
+            pr_points=pr_points,
             trend_data=trend_data,
             prompt_hints=prompt_hints,
         )
